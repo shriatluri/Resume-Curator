@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi import HTTPException
-
+from typing import Optional
 
 # http://localhost:8000/docs
 
@@ -16,7 +16,12 @@ class ResumeSubmission(BaseModel):
     job_url: str
 
 # Defind what the suggesttions are
-
+class Suggestion(BaseModel):
+    section: str
+    original_text: str
+    suggested_text: str
+    reason: Optional[str] = None
+    status: str = "pending"
 
 @app.post("/submit_resume")
 def submit_resume(submission: ResumeSubmission):
@@ -25,7 +30,7 @@ def submit_resume(submission: ResumeSubmission):
         "latex_code": submission.latex_code,
         "job_url": submission.job_url,
         "status": "submitted",
-        "suggestions": []  # Placeholder for AI suggestions
+        "suggestions": [] # where the suggestions are stored
     }
     return {"session_id": session_id}
 
@@ -41,3 +46,10 @@ def update_status(session_id: str, status: str):
         raise HTTPException(status_code=404, detail="Session not found")
     sessions[session_id]["status"] = status
     return {"session_id": session_id, "new_status": status}
+
+@app.post("/session/{session_id}/add_suggestion")
+def add_suggestion(session_id: str, suggestion: Suggestion):
+    if session_id not in sessions:
+        return {'error': 'Session not found'}
+    sessions[session_id]["suggestions"].append(suggestion.dict())
+    return {"message": "Suggestion added", "suggestion": suggestion}
