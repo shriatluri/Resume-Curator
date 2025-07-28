@@ -17,6 +17,7 @@ class ResumeSubmission(BaseModel):
 
 # Defind what the suggesttions are
 class Suggestion(BaseModel):
+    id: str
     section: str
     original_text: str
     suggested_text: str
@@ -54,7 +55,7 @@ def add_suggestion(session_id: str, suggestion: Suggestion):
     sessions[session_id]["suggestions"].append(suggestion.dict())
     return {"message": "Suggestion added", "suggestion": suggestion}
 
-# Apporve and Reject Suggestions
+# Apporve and Reject Suggestions - need to convert to integer
 @app.post("/session/{session_id}/approve_suggestion/{suggestion_id}")
 def approve_suggestion(session_id: str, suggestion_id: str):
     if session_id not in sessions:
