@@ -1,3 +1,4 @@
+from uuid import uuid4
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi import HTTPException
@@ -52,29 +53,29 @@ def update_status(session_id: str, status: str):
 def add_suggestion(session_id: str, suggestion: Suggestion):
     if session_id not in sessions:
         return {'error': 'Session not found'}
-    sessions[session_id]["suggestions"].append(suggestion.dict())
-    return {"message": "Suggestion added", "suggestion": suggestion}
+    # Generate a unique id for the suggestion
+    suggestion_with_id = suggestion.dict()
+    suggestion_with_id['id'] = str(uuid4())
+    sessions[session_id]["suggestions"].append(suggestion_with_id)
+    return {"message": "Suggestion added", "suggestion": suggestion_with_id}
 
-# Apporve and Reject Suggestions - need to convert to integer
+# Apporve and Reject Suggestions - need to convert to integer, have a session_id
 @app.post("/session/{session_id}/approve_suggestion/{suggestion_id}")
 def approve_suggestion(session_id: str, suggestion_id: str):
     if session_id not in sessions:
         return {'error': 'Session not found'}
-    try:
-        index = int(suggestion_id)
-        sessions[session_id]["suggestions"][index]["status"] = "approved"
-        return {"message": "Suggestion approved", "suggestion": sessions[session_id]["suggestions"][index]}
-    except ValueError:
-        return {'error': 'Invalid suggestion ID'}
-
+    for suggestion in sessions[session_id]["suggestions"]:
+        if suggestion["id"] == suggestion_id:
+            suggestion["status"] = "approved"
+            return {"message": "Suggestion approved", "suggestion": suggestion}
+    return {'error': 'Suggestion not found'}
 
 @app.post("/session/{session_id}/reject_suggestion/{suggestion_id}")
 def reject_suggestion(session_id: str, suggestion_id: str):
     if session_id not in sessions:
         return {'error': 'Session not found'}
-    try:
-        index = int(suggestion_id)
-        sessions[session_id]["suggestions"][index]["status"] = "rejected"
-        return {"message": "Suggestion rejected", "suggestion": sessions[session_id]["suggestions"][index]}
-    except ValueError:
-        return {'error': 'Invalid suggestion ID'}
+    for suggestion in sessions[session_id]["suggestions"]:
+        if suggestion["id"] == suggestion_id:
+            suggestion["status"] = "rejected"
+            return {"message": "Suggestion rejected", "suggestion": suggestion}
+    return {'error': 'Suggestion not found'}
