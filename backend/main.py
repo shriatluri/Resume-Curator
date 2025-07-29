@@ -79,3 +79,20 @@ def reject_suggestion(session_id: str, suggestion_id: str):
             suggestion["status"] = "rejected"
             return {"message": "Suggestion rejected", "suggestion": suggestion}
     return {'error': 'Suggestion not found'}
+
+# Get the final latex code
+@app.get("/session/{session_id}/final_resume")
+def get_final_resume(session_id: str):
+    if session_id not in sessions:
+        return {'error': 'Session not found'}
+    session = sessions[session_id]
+    latex_code = session['latex_code']
+    # Apply all approved suggestions
+    for suggestion in session['suggestions']:
+        if suggestion['status'] == 'approved':
+            latex_code = latex_code.replace(suggestion['original_text'], suggestion['suggested_text'])
+    return {
+        'original_latex': session['latex_code'],
+        'final_latex': latex_code,
+        'approved_suggestions': [s for s in session['suggestions'] if s['status'] == 'approved']
+    }
