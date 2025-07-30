@@ -39,7 +39,7 @@ def submit_resume(submission: ResumeSubmission):
 @app.get("/session/{session_id}")
 def get_session(session_id: str):
     if session_id not in sessions:
-        return {'error': 'Session not found'}
+        raise HTTPException(status_code=404, detail="Session not found")
     return sessions[session_id]
 
 @app.post("/session/{session_id}/status")
@@ -52,7 +52,7 @@ def update_status(session_id: str, status: str):
 @app.post("/session/{session_id}/add_suggestion")
 def add_suggestion(session_id: str, suggestion: Suggestion):
     if session_id not in sessions:
-        return {'error': 'Session not found'}
+        raise HTTPException(status_code=404, detail="Session not found")
     # Generate a unique id for the suggestion
     suggestion_with_id = suggestion.dict()
     suggestion_with_id['id'] = str(uuid4())
@@ -63,17 +63,17 @@ def add_suggestion(session_id: str, suggestion: Suggestion):
 @app.post("/session/{session_id}/approve_suggestion/{suggestion_id}")
 def approve_suggestion(session_id: str, suggestion_id: str):
     if session_id not in sessions:
-        return {'error': 'Session not found'}
+        raise HTTPException(status_code=404, detail="Session not found")
     for suggestion in sessions[session_id]["suggestions"]:
         if suggestion["id"] == suggestion_id:
             suggestion["status"] = "approved"
             return {"message": "Suggestion approved", "suggestion": suggestion}
-    return {'error': 'Suggestion not found'}
+    raise HTTPException(status_code=404, detail="Suggestion not found")
 
 @app.post("/session/{session_id}/reject_suggestion/{suggestion_id}")
 def reject_suggestion(session_id: str, suggestion_id: str):
     if session_id not in sessions:
-        return {'error': 'Session not found'}
+        raise HTTPException(status_code=404, detail="Suggestion not found")
     for suggestion in sessions[session_id]["suggestions"]:
         if suggestion["id"] == suggestion_id:
             suggestion["status"] = "rejected"
@@ -84,7 +84,7 @@ def reject_suggestion(session_id: str, suggestion_id: str):
 @app.get("/session/{session_id}/final_resume")
 def get_final_resume(session_id: str):
     if session_id not in sessions:
-        return {'error': 'Session not found'}
+        raise HTTPException(status_code=404, detail="Session not found")
     session = sessions[session_id]
     latex_code = session['latex_code']
     # Apply all approved suggestions
