@@ -9,6 +9,7 @@ from typing import Optional
 # Create a FastAPI instance
 app = FastAPI()
 
+# key is session_id, value is a dictionary with the following keys:
 sessions = {}
 
 # Pydantic model for validating resume submission
